@@ -1,9 +1,14 @@
 const express = require('express');
 const app = express();
+const PORT = process.env.PORT || 5000;
 
 app.get('/', (req, res) => {
-    res.send({ hi: 'there'});
-});
+    if(process.env.NODE_ENV === 'production')
+        res.send({ hi: 'PRODUCTION!',
+                    port: PORT});
+    else
+        res.send({ hi: 'DEV',
+        port: PORT});
+    });
 
-const PORT = process.env.PORT || 5000;
 app.listen(PORT);
