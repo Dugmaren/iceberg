@@ -2,18 +2,10 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 5000;
 const bodyParser = require('body-parser');
-const passport = require('passport');
 
+require('./services/passport');
 require('./routes/authRoutes')(app);
 
-app.get('/', (req, res) => {
-    if(process.env.NODE_ENV === 'production')
-        res.send({ hi: 'PRODUCTION!',
-                    port: PORT});
-    else
-        res.send({ hi: 'DEV',
-        port: PORT});
-    });
 /*
 app.use(bodyParser.json());
 
