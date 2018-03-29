@@ -1,20 +1,121 @@
-const keys = require('../config/keys');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const keys = require('../config/keys');
+const mysql = require('mysql');
+var bCrypt = require('bcrypt-nodejs');
 
-/*
-const User = mongoose.model('users');
+module.exports = function(passport, user) {
+  var User = user;
+  var LocalStrategy = require('passport-local').Strategy;
 
-passport.serializeUser((user, done) => {
-  done(null, user.id); // note this is the mongo DB collection item ID, NOT the google id
-  // user.id is hardcoded to mean the mondo model's ID
-});
-passport.deserializeUser((id, done) => {
-  User.findById(id).then(user => {
-    done(null, user);
+  passport.serializeUser(function(user, done) {
+    done(null, user.id);
   });
-});
-*/
+  passport.deserializeUser(function(id, done) {
+    User.findById(id).then(function(user) {
+      if (user) {
+        done(null, user.get());
+      } else {
+        done(user.errors, null);
+      }
+    });
+  });
+
+  passport.use(
+    'local-signup',
+    new LocalStrategy(
+      {
+        usernameField: 'email',
+        passwordField: 'password',
+        passReqToCallback: true, // allows us to pass back the entire request to the callback
+      },
+
+      function(req, email, password, done) {
+        var generateHash = function(password) {
+          return bCrypt.hashSync(password, bCrypt.genSaltSync(8), null);
+        };
+
+        User.findOne({
+          where: {
+            email: email,
+          },
+        }).then(function(user) {
+          if (user) {
+            return done(null, false, {
+              message: 'That email is already taken',
+            });
+          } else {
+            var userPassword = generateHash(password);
+
+            var data = {
+              email: email,
+              password: userPassword,
+              name: req.body.name,
+            };
+
+            User.create(data).then(function(newUser, created) {
+              if (!newUser) {
+                return done(null, false);
+              }
+
+              if (newUser) {
+                return done(null, newUser);
+              }
+            });
+          }
+        });
+      }
+    )
+  );
+
+  passport.use(
+    'local-signin',
+    new LocalStrategy(
+      {
+        // by default, local strategy uses username and password, we will override with email
+        usernameField: 'email',
+        passwordField: 'password',
+        passReqToCallback: true, // allows us to pass back the entire request to the callback
+      },
+
+      function(req, email, password, done) {
+        var User = user;
+
+        var isValidPassword = function(userpass, password) {
+          return bCrypt.compareSync(password, userpass);
+        };
+
+        User.findOne({
+          where: {
+            email: email,
+          },
+        })
+          .then(function(user) {
+            if (!user) {
+              return done(null, false, {
+                message: 'Email does not exist',
+              });
+            }
+
+            if (!isValidPassword(user.password, password)) {
+              return done(null, false, {
+                message: 'Incorrect password.',
+              });
+            }
+
+            var userinfo = user.get();
+            return done(null, userinfo);
+          })
+          .catch(function(err) {
+            console.log('Error:', err);
+
+            return done(null, false, {
+              message: 'Something went wrong with your Signin',
+            });
+          });
+      }
+    )
+  );
 
 passport.use(
   new GoogleStrategy(
@@ -24,13 +125,69 @@ passport.use(
       callbackURL: '/auth/google/callback',
       proxy: true,
     },
-    async (accessToken, refreshToken, profile, done) => {
-//      const existingUser = await User.findOne({googleId: profile.id});
-//      if (existingUser) return done(null, existingUser);
+    (accessToken, refreshToken, profile, done) => {
+      User.findOne({
+        where: {
+          google_id: profile.id
+        }
+      })
+        .then(function(user) {
+          if(!user) {
+            console.log('Google User - non-customer (' + profile.id + ')');
+            return done(null, false, { message: 'Google User - non-customer (' + profile.id + ')'});
 
-//      const user = await new User({googleId: profile.id}).save();
-      done(null, profile);
+          }
+          else {
+            console.log('Found user!!');
+            return done(null, user);
+          }
+        });
     }
   )
 );
+/*      
+      //      console.log('Access Token: ', accessToken);
+      //      console.log('Profile: ', profile);
+      const existingUser = User.findOne({googleId: profile.id}, err, user => {
+        if (err) {
+          console.log('Error finding user.');
+          return done(err);
+        }
 
+        if (user) {
+          console.log('Already have a user! ' + user);
+          return done(null, user);
+        }
+
+        var connection = mysql.createConnection({
+          host: keys.db_hostName,
+          user: keys.db_userName,
+          password: keys.db_password,
+          database: keys.db_name,
+        });
+
+        connection.connect();
+
+        connection.query(
+          'SELECT * FROM user WHERE google_id = ' + profile.id,
+          function(err, rows, fields) {
+            if (err) throw err;
+
+            if (rows[0]) {
+              console.log('Found user with Google ID - ' + rows[0].name);
+              return done(null, user);
+            }
+
+            console.log('New user by Google ID - ' + profile.id);
+            return done(null, user);
+          }
+        );
+
+        connection.end();
+        console.log('Find user match for GoogleID (' + profile.id + ')');
+        done(null, null);
+      });
+    }
+  )
+  */
+}

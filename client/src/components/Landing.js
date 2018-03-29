@@ -16,7 +16,7 @@ class Landing extends Component {
           src={logo}
           alt="Iceberg"
         />
-        <a className="waves-effect waves-light btn">
+        <a className="waves-effect waves-light btn" href='/actions/connect'>
           DB
           <i className="material-icons">save</i>
         </a>
