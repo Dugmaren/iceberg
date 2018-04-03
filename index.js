@@ -1,30 +1,23 @@
 const express = require('express');
-const app = express();
 const PORT = process.env.PORT || 5000;
 const bodyParser = require('body-parser');
 const passport = require('passport');
 const session = require('express-session');
 const env = require('dotenv').load();
 const models = require('./models');
-const exphbs = require('express-handlebars');
+const keys = require('./config/keys');
 
+const app = express();
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
-app.use(session({secret: 'whatever', 
-                resave: true, 
+app.use(session({secret: keys.sessionCookieSecret, 
+                resave: true,                   // resave puts session in store
+                //cookie: { secure: true },     // only works under HTTPS:\\
                 saveUninitialized: true}));
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.set('views', './views')
-app.engine('hbs', exphbs({
-    extname: '.hbs'
-}));
-
-app.set('view engine', '.hbs');
-//require('./services/passport');
 require('./routes/dbRoutes')(app);
-//require('./routes/authRoutes')(app); // adding passport through tutorial..
 require('./routes/authRoutes')(app, passport);
 require('./services/passport')(passport, models.user);
 /*

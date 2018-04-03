@@ -9,14 +9,14 @@ module.exports = function(sequelize, Sequelize) {
         type: Sequelize.INTEGER
     },
     google_id: {
-        type: Sequelize.TEXT
+        type: Sequelize.STRING
     },
     name: {
-      type: Sequelize.STRING,
-      notEmpty: true,
+      type: Sequelize.STRING
+//      notEmpty: true,
     },
     username: {
-      type: Sequelize.TEXT,
+      type: Sequelize.STRING,
     },
     email: {
       type: Sequelize.STRING,
@@ -25,8 +25,8 @@ module.exports = function(sequelize, Sequelize) {
       },
     },
     password: {
-      type: Sequelize.STRING,
-      allowNull: false,
+      type: Sequelize.STRING
+//      allowNull: false,
     },
     access: {
         type: Sequelize.ENUM('admin', 'customer', 'online', 'none'),

@@ -5,7 +5,7 @@ import logo from '../images/logo.gif';
 class Landing extends Component {
   render() {
     return (
-      <div className="valign-wrapper">
+      <div>
         <img
           style={{
             width: '90%',
@@ -16,10 +16,6 @@ class Landing extends Component {
           src={logo}
           alt="Iceberg"
         />
-        <a className="waves-effect waves-light btn" href='/actions/connect'>
-          DB
-          <i className="material-icons">save</i>
-        </a>
       </div>
     );
   }

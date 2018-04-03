@@ -7,6 +7,9 @@ import App from './components/App';
 import registerServiceWorker from './registerServiceWorker';
 import { createStore, applyMiddleware } from 'redux';
 import reducers from './reducers';
+
+// Redux Thunk makes it so an action creator does not have to
+// IMMEDIATELY return an action. It can instead return a PROMISE
 import reduxThunk from 'redux-thunk';
 import { Provider } from 'react-redux';
 

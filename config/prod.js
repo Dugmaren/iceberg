@@ -5,5 +5,6 @@ module.exprots = {
     db_userName: process.env.DB_USERNAME,
     db_password: process.env.DB_PASSWORD,
     db_name: process.env.DB_NAME,
-    redirectDomain: process.env.REDIRECT_DOMAIN
+    redirectDomain: process.env.REDIRECT_DOMAIN,
+    sessionCookieSecret: 'whatea4@#DLFKJfkle924rlnadsEver'
 }

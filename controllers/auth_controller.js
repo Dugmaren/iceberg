@@ -1,19 +1,13 @@
 var exports = (module.exports = {});
 
-exports.signup = function(req, res) {
-  res.render('../views/signup');
-};
-
-exports.signin = function(req, res) {
-  res.render('../views/signin');
-};
-
-exports.dashboard = function(req, res) {
-  res.render('/dashboard');
-};
-
-exports.logout = function(req, res) {
-  req.session.destroy(function(err) {
-    res.redirect('/');
+exports.logout = (req, res, next) => {
+    // I may remove one of these...
+  req.logout(); // Udemy example.. cookies <-- passport built in function
+  req.session.destroy(err => {
+    if (err) {
+      console.log(err);
+      res.redirect('/error');
+    }
+    next();
   });
 };

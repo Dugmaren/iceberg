@@ -8,11 +8,11 @@ module.exports = function(passport, user) {
   var User = user;
   var LocalStrategy = require('passport-local').Strategy;
 
-  passport.serializeUser(function(user, done) {
+  passport.serializeUser((user, done) => {
     done(null, user.id);
   });
-  passport.deserializeUser(function(id, done) {
-    User.findById(id).then(function(user) {
+  passport.deserializeUser((id, done) => {
+    User.findById(id).then(user => {
       if (user) {
         done(null, user.get());
       } else {
@@ -85,66 +85,65 @@ module.exports = function(passport, user) {
           return bCrypt.compareSync(password, userpass);
         };
 
-        User.findOne({
-          where: {
-            email: email,
-          },
-        })
-          .then(function(user) {
+        User.findOne({where: {email: email}})
+          .then(user => {
             if (!user) {
-              return done(null, false, {
-                message: 'Email does not exist',
-              });
+              console.log('Email does not exist.');
+              return done(null, false);
             }
 
             if (!isValidPassword(user.password, password)) {
-              return done(null, false, {
-                message: 'Incorrect password.',
-              });
+              console.log('Incorrect password.');
+              return done(null, false);
             }
-
+            console.log('Found user by email - ' + user.email);
             var userinfo = user.get();
             return done(null, userinfo);
           })
           .catch(function(err) {
             console.log('Error:', err);
-
-            return done(null, false, {
-              message: 'Something went wrong with your Signin',
-            });
+            return done(null, false);
           });
       }
     )
   );
 
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: keys.googleClientID,
-      clientSecret: keys.googleClientSecret,
-      callbackURL: '/auth/google/callback',
-      proxy: true,
-    },
-    (accessToken, refreshToken, profile, done) => {
-      User.findOne({
-        where: {
-          google_id: profile.id
-        }
-      })
-        .then(function(user) {
-          if(!user) {
-            console.log('Google User - non-customer (' + profile.id + ')');
-            return done(null, false, { message: 'Google User - non-customer (' + profile.id + ')'});
-
-          }
-          else {
-            console.log('Found user!!');
-            return done(null, user);
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: keys.googleClientID,
+        clientSecret: keys.googleClientSecret,
+        callbackURL: '/auth/google/callback',
+        proxy: true,
+      },
+      (accessToken, refreshToken, profile, done) => {
+        User.findOne({where: {google_id: profile.id}}).then(user => {
+          if (!user) {
+            // don't forget profile.image.url
+            console.log(
+              'User (' +
+                profile.displayName +
+                ') ID (' +
+                profile.id +
+                ') NOT found, adding.'
+            );
+            new User({
+              google_id: profile.id,
+              name: profile.displayName,
+            })
+              .save()
+              .then(user => done(null, user));
+          } else {
+            console.log('User ID (' + profile.id + ') found.');
+            done(null, user);
           }
         });
-    }
-  )
-);
+      }
+    )
+  );
+};
+
+
 /*      
       //      console.log('Access Token: ', accessToken);
       //      console.log('Profile: ', profile);
@@ -190,4 +189,3 @@ passport.use(
     }
   )
   */
-}

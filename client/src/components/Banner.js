@@ -1,8 +1,26 @@
 import React, {Component} from 'react';
+import {connect} from 'react-redux';
 
 //import logo from '../images/logo.gif';
 
 class Banner extends Component {
+  renderContent() {
+    switch (this.props.auth) {
+      case null:
+        return;
+      case false:
+        return <a className="yellow-text" href="/auth">Login</a>;
+      default:
+        return <a className="green-text" href="/api/logout">Logout</a>;
+    }
+  }
+
+  renderDashboard() {
+    if (this.props.auth) {
+      return <li><a href="/dashboard">Dashboard</a></li>
+    }
+  }
+
   render() {
     return (
       <div>
@@ -12,6 +30,7 @@ class Banner extends Component {
               <h2 style={{margin: '0px', padding: '0px'}}>Iceberg Dry Ice</h2>
             </a>
             <ul className="right hide-on-med-and-down">
+              {this.renderDashboard()}
               <li>
                 <a href="/about">About</a>
               </li>
@@ -25,9 +44,7 @@ class Banner extends Component {
                 <a href="/dryice/safety">Safety</a>
               </li>
               <li className="divider" />
-              <li>
-                <a href="/auth/google">LOGIN</a>
-              </li>
+              <li>{this.renderContent()}</li>
             </ul>
           </div>
         </nav>
@@ -37,10 +54,14 @@ class Banner extends Component {
   }
 }
 
-export default Banner;
+// because we only care about state.auth
 /*
-class='active' <-- current page
-          <img  src={logo} 
-                alt='Home'
-                style={{position: 'absolute', top: '0px', right: '0px', height: '90%', resize: 'auto'}} />
-*/
+function mapStateToProps(state) {
+  return { auth: state.auth };
+}
+ */
+function mapStateToProps({auth}) {
+  return {auth};
+}
+
+export default connect(mapStateToProps)(Banner);
